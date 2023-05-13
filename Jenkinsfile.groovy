@@ -1,19 +1,17 @@
 pipeline {
     agent any
-
     stages {
         stage('SCM_Checkout') {
             steps {
-                checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[credentialsId: 'git_repo_pass', url: 'https://github.com/Venkateshd279/my-project.git']])
+                checkout scmGit(branches: [[name: '*/irineproject']], extensions: [], userRemoteConfigs: [[credentialsId: 'github_authentication', url: 'https://github.com/irineasha/my-app.git']])
             }
         }
-        
         stage('SonarQube Analysis') {
             steps {
               script {
-             withSonarQubeEnv(credentialsId: 'SonarQube_token') {
+             withSonarQubeEnv(credentialsId: 'sonarqube_token') {
                  
-              sh 'mvn clean verify sonar:sonar'
+              sh 'mvn clean verify sonar:sonar' 
              }
             }
             
@@ -24,7 +22,7 @@ pipeline {
             steps {
                 sleep(60)
               timeout(time: 1, unit: 'HOURS') {
-                waitForQualityGate abortPipeline: true, credentialsId: 'SonarQube_token'
+                waitForQualityGate abortPipeline: true, credentialsId: 'sonarqube_token'
               }
             }
             post {
@@ -54,20 +52,19 @@ pipeline {
             steps {
                 script {
                     
-                    sh 'cd /var/lib/jenkins/workspace/Onlineshopping'
-                    def dockerImage = docker.build("venkateshdhanap/myweb:0.0.2", "--file Dockerfile .")
+                    sh 'cd /var/lib/jenkins/workspace/shirley'
+                    def dockerImage = docker.build("irineasha/shirleyapp:latest", "--file Dockerfile .")
                 }
             }
         }
-        
+      
         
         stage('Push Image to ECR') {
             steps {
                 script {
                     docker.withRegistry(
-                        'https://477099163803.dkr.ecr.ap-south-1.amazonaws.com',
-                        'ecr:ap-south-1:my.aws.credentials') {
-                            def myImage = docker.build('jenkins_project')
+                        'https://066924190412.dkr.ecr.us-east-1.amazonaws.com','ecr:us-east-1:aws_credentials') {
+                            def myImage = docker.build('eks_project')
                             myImage.push('latest')
                         }
                     }
@@ -85,7 +82,7 @@ pipeline {
             steps {
                 
                 echo 'Deploying on EKS'
-                withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: '', contextName: '', credentialsId: 'k8s', namespace: '', serverUrl: '']]) {
+                withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: '', contextName: '', credentialsId: 'k88s', namespace: '', serverUrl: '']]) {
                
                  sh 'kubectl apply -f /var/lib/jenkins/tomcat-deployment.yaml'
              }
@@ -93,3 +90,6 @@ pipeline {
         }
     }
 }
+
+
+
