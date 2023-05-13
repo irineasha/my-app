@@ -87,7 +87,7 @@ pipeline {
                 echo 'Deploying on EKS'
                 withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: '', contextName: '', credentialsId: 'k8s', namespace: '', serverUrl: '']]) {
                
-                 sh 'kubectl apply -f /var/lib/jenkins/mainservice.yaml'
+                 sh 'kubectl apply -f /var/lib/jenkins/tomcat-deployment.yaml'
              }
             }
         }
